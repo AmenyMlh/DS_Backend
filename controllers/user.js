@@ -98,5 +98,27 @@ exports.addAdmin = (req,res,next) =>{
         })
       );
      }
-     exports.addAuthor = (req,res,next) =>{
-     }
+
+exports.validateAuthor = async (req, res, next) => {
+    const userId = req.params.id; 
+
+    try {
+        
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Author not found.' });
+        }
+
+        
+        user.statut = 'V';
+        user.password = user.telephone;
+
+       
+        await user.save();
+
+        res.status(200).json({ message: "Author validated "});
+    } catch (error) {
+        res.status(500).json({ error: error.message, message: "Error while validating the author"});
+    }
+};

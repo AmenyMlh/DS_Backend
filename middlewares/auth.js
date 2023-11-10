@@ -38,3 +38,15 @@ module.exports.isAdmin = (req,res,next) => {
     res.status(401).json({error: error.message})
   }
 }
+module.exports.isAuthor = (req,res,next) => {
+  try {
+    if(req.auth.statut === "author"){
+      next()
+    }
+    else{
+      res.status(403).json({ message: "Access refused. you are not an author !!"})
+    }
+  } catch (e){
+    res.status(401).json({error: error.message})
+  }
+}
