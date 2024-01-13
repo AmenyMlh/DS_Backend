@@ -51,4 +51,44 @@ const addOeuvre = async (req, res) => {
   }
 };
 
+const express = require("express");
+const oeuvreController = require("../controllers/oeuvreController");
+const auth = require("../middlewares/auth");
+
+const router = express.Router();
+
+router.post("/add", auth.loggedMiddleware, oeuvreController.addOeuvre);
+
+module.exports = router;
+
+
 module.exports = { addOeuvre };
+const deleteChoriste = async (req, res) => {
+  try {
+    const choristeId = req.params.id;
+
+    const choriste = await Choriste.findById(choristeId);
+
+    if (!choriste) {
+      return res.status(404).json({ error: "Choriste non trouvé." });
+    }
+
+    const associatedOeuvres = await Oeuvre.find({ choristes: choristeId });
+    await Oeuvre.find({ choristes: choristeId });
+
+    await choriste.deleteOne({ _id: choristeId });
+    const oeuvreIds = associatedOeuvres.map((oeuvre) => oeuvre._id);
+
+    res.status(200).json({
+      message: "Choriste supprimé avec succès.",
+      associatedOeuvreIds: oeuvreIds,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Erreur lors de la suppression du choriste.",
+      message: error.message,
+    });
+  }
+};
+router.delete("/delete/:id", choristeController.deleteChoriste);
