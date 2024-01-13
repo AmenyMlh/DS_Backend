@@ -1,0 +1,54 @@
+const Oeuvre = require("../models/oeuvres");
+const Choriste = require("../models/choriste");
+
+const addOeuvre = async (req, res) => {
+  try {
+    const choristeId = req.auth.choristeId;
+    const { titre, choristesIds } = req.body;
+
+    if (choristesIds.includes(choristeId)) {
+      return res.status(400).json({
+        error: "Un choriste ne peut pas ajouter lui-même dans une oeuvre.",
+      });
+    }
+
+    const choristes = await Choriste.find({ _id: { $in: choristesIds } });
+
+    if (choristes.length !== 2) {
+      return res
+        .status(404)
+        .json({ error: "Au moins un des choristes n'a pas été trouvé." });
+    }
+
+    if (choristes[0].tessiture === choristes[1].tessiture) {
+      return res.status(400).json({
+        error:
+          "Les choristes ayant la même tessiture ne peuvent pas faire partie de la même oeuvre.",
+      });
+    }
+
+    const newOeuvre = new Oeuvre({
+      titre,
+      choristes: choristes.map((choriste) => choriste.toObject()),
+    });
+
+    await newOeuvre.save();
+
+    const populatedOeuvre = await Oeuvre.findById(newOeuvre._id).populate(
+      "choristes"
+    );
+
+    res.status(201).json({
+      message: "Oeuvre ajoutée avec succès.",
+      oeuvre: populatedOeuvre,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Erreur lors de l'ajout de l'oeuvre.",
+      message: error.message,
+    });
+  }
+};
+
+module.exports = { addOeuvre };
